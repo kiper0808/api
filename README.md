@@ -12,4 +12,3 @@
   - http://localhost:8080/swagger/storage/index.html
 - `make migrate` - запуск миграций
 - `make migrate-down` - rollback миграций
-- `make lint` - запуск линтера
