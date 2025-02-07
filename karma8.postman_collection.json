@@ -1,0 +1,109 @@
+{
+	"info": {
+		"_postman_id": "1de49a15-0a4d-4240-8c4f-e97d32bde160",
+		"name": "karma8",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31321728"
+	},
+	"item": [
+		{
+			"name": "uploadFile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "secret",
+						"type": "text"
+					},
+					{
+						"key": "X-Idempotency-Key",
+						"value": "123",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/kipaz/Pictures/ubuntu-plain-wordmark-icon-252x256-omyrtk38.png"
+						},
+						{
+							"key": "objectName",
+							"value": "a84744d0-b091-47d7-a2fb-db2c7809cb8e",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8081/api/v1/files",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"v1",
+						"files"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "downloadFile",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "secret",
+						"type": "text"
+					},
+					{
+						"key": "X-Idempotency-Key",
+						"value": "123",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/api/v1/files/31b5453d-f697-4d50-8b85-670364bf7f75",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"files",
+						"31b5453d-f697-4d50-8b85-670364bf7f75"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "metrics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:9000/minio/metrics/v3/system",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"minio",
+						"metrics",
+						"v3",
+						"system"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
