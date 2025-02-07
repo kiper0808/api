@@ -8,12 +8,12 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	fileStorage "github.com/kiper0808/s3/internal/service/minio_storage"
+	"github.com/kiper0808/api/internal/storage/service/minio_storage"
 
-	"github.com/kiper0808/s3/pkg/http"
+	"github.com/kiper0808/api/pkg/http"
 
-	"github.com/kiper0808/s3/internal/config"
-	"github.com/kiper0808/s3/internal/repository"
+	"github.com/kiper0808/api/internal/storage/config"
+	"github.com/kiper0808/api/internal/storage/repository"
 )
 
 type Services struct {
@@ -25,7 +25,7 @@ type Deps struct {
 	Repos             *repository.Repositories
 	HttpClient        *http.Client
 	Config            *config.Config
-	FileStorageClient fileStorage.Client
+	FileStorageClient minio_storage.Client
 }
 
 type Storage interface {

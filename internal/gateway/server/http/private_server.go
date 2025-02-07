@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/kiper0808/s3/internal/gateway/config"
-	"github.com/kiper0808/s3/internal/gateway/healthcheck"
+	"github.com/kiper0808/api/internal/gateway/config"
+	"github.com/kiper0808/api/internal/gateway/healthcheck"
 	"net"
 	"net/http"
 

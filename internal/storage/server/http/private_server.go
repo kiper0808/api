@@ -12,8 +12,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kiper0808/s3/internal/config"
-	"github.com/kiper0808/s3/internal/healthcheck"
+	"github.com/kiper0808/api/internal/storage/config"
+	"github.com/kiper0808/api/internal/storage/healthcheck"
 )
 
 type privateServer struct {

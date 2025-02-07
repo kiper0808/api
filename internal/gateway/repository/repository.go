@@ -3,9 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	domain2 "github.com/kiper0808/s3/internal/gateway/domain"
+	domain2 "github.com/kiper0808/api/internal/gateway/domain"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/google/uuid"
@@ -18,7 +17,7 @@ type Repositories struct {
 	Chunk   Chunk
 }
 
-func NewRepositories(db *sqlx.DB, redisClient redis.UniversalClient, logger *zap.Logger) *Repositories {
+func NewRepositories(db *sqlx.DB, logger *zap.Logger) *Repositories {
 	return &Repositories{
 		Storage: newStorageRepository(db),
 		Chunk:   newChunkRepository(db),

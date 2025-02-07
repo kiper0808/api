@@ -3,9 +3,6 @@
 export GO111MODULE=on
 export CGO_ENABLED=0
 
-BUILD_DIR ?= cmd/app
-OUTPUT_BINARY ?= build/output/main
-
 # colors
 GREEN=\033[1;32m
 PURPLE=\033[1;35m
@@ -21,33 +18,13 @@ compose-down:
 	@echo 'compose deps'
 	docker-compose -f docker-compose.yaml down
 
-# build app
-build: deps build-binary
-
-# bin build
-build-binary:
-	@echo 'build app karma8-api'
-	go build -o ./$(OUTPUT_BINARY) ./$(BUILD_DIR)
-
-# run go with exporting envs and deps.
-run: deps run-app
-
-# install dependencies
-deps:
-	@echo 'install dependencies'
-	go mod tidy -v
-
-# run app
-run-app:
-	@echo "\n${GREEN}Run karma8-api$(dbName)${NC}\n"
-	export $$(grep -v '^#' .env | xargs) && go run ./$(BUILD_DIR) app.go
-
 # generate swagger
 swag:
 	@echo 'generation swagger docs'
-	swag init --parseDependency -g handler.go -dir internal/api/http/v1 --instanceName api
+	swag init --parseDependency -g handler.go -dir internal/gateway/api/http/v1 --instanceName gateway
+	swag init --parseDependency -g handler.go -dir internal/storage/api/http/v1 --instanceName storage
 
-#migrate
+# migrate
 migrate:
 	@echo "\n${GREEN}UP MIGRATE DB${NC}\n"
 	@docker run -e INSTALL_MYSQL=true --rm -it \
@@ -71,4 +48,3 @@ lint:
 		then curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v$(LINTER_VERSION); fi;
 	$(GOPATH)/bin/golangci-lint run --out-format=tab -v --whole-files
 	@echo
-# trigger build

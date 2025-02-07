@@ -27,7 +27,7 @@ type uploadFileResponse struct {
 // @Param X-Idempotency-Key header string true "Idempotency Key"
 // @Param file formData file true "File to upload"
 // @Success 201 {object} uploadFileResponse
-// @Failure 400 {object} ErrorStruct
+// @Failure 400
 // @Router /files [post]
 // @Security Bearer
 func (h *Handler) uploadFile(c *gin.Context) {
@@ -67,7 +67,7 @@ func (h *Handler) uploadFile(c *gin.Context) {
 // @Produce  json
 // @Param	id	path		string		true	"ID файла"
 // @Success 200
-// @Failure 400 {object} ErrorStruct
+// @Failure 400
 // @Router /files/{id} [get]
 // @Security Bearer
 func (h *Handler) downloadFile(c *gin.Context) {
@@ -75,13 +75,16 @@ func (h *Handler) downloadFile(c *gin.Context) {
 	fileIDStr := c.Param("id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
+		h.logger.Error("failed to parse uuid", zap.Error(err))
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
 	object, err := h.services.Storage.DownloadFile(ctx, fileID)
 	if err != nil {
 		h.logger.Error("cant download file", zap.Error(err))
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
 	defer object.Close()
@@ -90,6 +93,7 @@ func (h *Handler) downloadFile(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("cant download file", zap.Error(err))
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
 	// Устанавливаем заголовки для скачивания

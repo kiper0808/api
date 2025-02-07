@@ -2,13 +2,13 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kiper0808/s3/internal/gateway/service"
+	"github.com/kiper0808/api/internal/gateway/service"
 	"go.uber.org/zap"
 )
 
-// @title Karma8 Test FileStorage
+// @title Karma8 Gateway Service
 // @version 1.0
-// @description API for Karma8 Test FileStorage
+// @description API for Karma8 Gateway Service
 
 // @BasePath /api/v1
 // @securityDefinitions.apikey Bearer

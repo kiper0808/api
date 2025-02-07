@@ -6,14 +6,14 @@ import (
 	"github.com/minio/minio-go/v7"
 	"mime/multipart"
 
-	"github.com/kiper0808/s3/internal/service/minio_storage"
+	"github.com/kiper0808/api/internal/storage/service/minio_storage"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/kiper0808/s3/internal/config"
-	"github.com/kiper0808/s3/internal/repository"
-	client "github.com/kiper0808/s3/pkg/http"
+	"github.com/kiper0808/api/internal/storage/config"
+	"github.com/kiper0808/api/internal/storage/repository"
+	client "github.com/kiper0808/api/pkg/http"
 )
 
 type serviceStorage struct {

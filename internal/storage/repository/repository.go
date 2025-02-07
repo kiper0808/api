@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/kiper0808/s3/internal/domain"
+	"github.com/kiper0808/api/internal/storage/domain"
 )
 
 type Repositories struct {

@@ -3,20 +3,17 @@ package http
 import (
 	"time"
 
-	sentrygin "github.com/getsentry/sentry-go/gin"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
-
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 
-	v1 "github.com/kiper0808/s3/internal/api/http/v1"
+	v1 "github.com/kiper0808/api/internal/storage/api/http/v1"
 
-	_ "github.com/kiper0808/s3/docs"
-	"github.com/kiper0808/s3/internal/config"
-	"github.com/kiper0808/s3/internal/service"
+	_ "github.com/kiper0808/api/docs"
+	"github.com/kiper0808/api/internal/storage/config"
+	"github.com/kiper0808/api/internal/storage/service"
 )
 
 type Handler struct {
@@ -46,12 +43,10 @@ func (h *Handler) Init(cfg *config.Config) *gin.Engine {
 	router.Use(
 		gin.Recovery(),
 		ginzap.Ginzap(h.logger, time.RFC3339, true),
-		sentrygin.New(sentrygin.Options{}),
-		otelgin.Middleware(cfg.EnvName),
 	)
 
 	if cfg.Server.SwaggerEnabled {
-		router.GET("/swagger/api/*any", ginSwagger.WrapHandler(swaggerfiles.NewHandler(), ginSwagger.InstanceName("api")))
+		router.GET("/swagger/storage/*any", ginSwagger.WrapHandler(swaggerfiles.NewHandler(), ginSwagger.InstanceName("storage")))
 	}
 
 	h.initAPI(router)

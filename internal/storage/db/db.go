@@ -10,10 +10,8 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelsqlx"
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 
-	"github.com/kiper0808/s3/internal/config"
+	"github.com/kiper0808/api/internal/storage/config"
 )
-
-const DuplicateEntry = 1062
 
 func New(cfg config.Database) (*sqlx.DB, error) {
 	location, err := time.LoadLocation(cfg.TimeZone)

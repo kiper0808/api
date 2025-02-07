@@ -1,0 +1,96 @@
+basePath: /api/v1
+definitions:
+  v1.uploadFileResponse:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+info:
+  contact: {}
+  description: API for Karma8 StorageService
+  title: Karma8 Storage Service
+  version: "1.0"
+paths:
+  /files:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загрузка файла
+      parameters:
+      - description: Idempotency Key
+        in: header
+        name: X-Idempotency-Key
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.uploadFileResponse'
+        "400":
+          description: Bad Request
+      security:
+      - Bearer: []
+      summary: Загрузка файла
+      tags:
+      - files
+  /files/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Скачивание файла
+      parameters:
+      - description: ID файла
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      security:
+      - Bearer: []
+      summary: Скачивание файла
+      tags:
+      - files
+  /metrics:
+    get:
+      description: Статус хранилища
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      security:
+      - Bearer: []
+      summary: Статус хранилища
+      tags:
+      - metrics
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

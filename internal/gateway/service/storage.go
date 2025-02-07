@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	domain2 "github.com/kiper0808/s3/internal/gateway/domain"
-	"github.com/kiper0808/s3/internal/gateway/repository"
-	"github.com/kiper0808/s3/internal/gateway/service/file_storage"
+	"github.com/kiper0808/api/internal/gateway/domain"
+	"github.com/kiper0808/api/internal/gateway/repository"
+	"github.com/kiper0808/api/internal/gateway/service/file_storage"
 	"io"
 	"mime/multipart"
 	"slices"
@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	client "github.com/kiper0808/s3/pkg/http"
+	client "github.com/kiper0808/api/pkg/http"
 )
 
 type serviceStorage struct {
@@ -52,23 +52,23 @@ type File struct {
 }
 
 // UploadFile загружает файл, разделяя его на части
-func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHeader) error {
+func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error) {
 	fileID := uuid.New()
 
 	storages, err := s.getStoragesWithMetrics(ctx)
 	if err != nil {
-		return fmt.Errorf("cant get storages: %w", err)
+		return nil, fmt.Errorf("cant get storages: %w", err)
 	}
 
 	data, err := file.Open()
 	if err != nil {
-		return fmt.Errorf("can't open file: %w", err)
+		return nil, fmt.Errorf("can't open file: %w", err)
 	}
 	defer data.Close()
 
 	fileData, err := io.ReadAll(data)
 	if err != nil {
-		return fmt.Errorf("can't read file: %w", err)
+		return nil, fmt.Errorf("can't read file: %w", err)
 	}
 
 	fileSize := len(fileData)
@@ -99,11 +99,11 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 
 			if err := s.fileStorageClient.Upload(ctx, partCopy, hostname, chunkID); err != nil {
 				errCh <- fmt.Errorf("cant upload chunk: %w", err)
-				cancel() // Прерываем остальные горутины
+				cancel()
 				return
 			}
 
-			err := s.chunkRepository.Create(ctx, &domain2.Chunk{
+			err := s.chunkRepository.Create(ctx, &domain.Chunk{
 				ID:              chunkID,
 				FileID:          fileID,
 				Part:            i,
@@ -117,7 +117,6 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 		}(hostname, partCopy, i)
 	}
 
-	// Ждём завершения всех горутин перед закрытием канала
 	go func() {
 		wg.Wait()
 		close(errCh)
@@ -125,11 +124,13 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 
 	for err := range errCh {
 		if err != nil {
-			return err // Немедленный выход при первой ошибке
+			return nil, err
 		}
 	}
 
-	return nil
+	return &File{
+		ID: fileID,
+	}, nil
 }
 
 type fileChunk struct {
@@ -204,7 +205,7 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 
 	for _, storage := range storages {
 		wg.Add(1)
-		go func(ctx context.Context, storage domain2.Storage) {
+		go func(ctx context.Context, storage domain.Storage) {
 			defer wg.Done()
 			data, err := s.getMetrics(ctx, &storage)
 			if err != nil {
@@ -241,7 +242,7 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 	return storageData[:chunks], nil
 }
 
-func (s *serviceStorage) getMetrics(ctx context.Context, storage *domain2.Storage) (*StorageData, error) {
+func (s *serviceStorage) getMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error) {
 	body, err := s.fileStorageClient.GetMetrics(ctx, storage.Hostname)
 	if err != nil {
 		return nil, fmt.Errorf("get metrics err: %w", err)

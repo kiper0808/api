@@ -19,20 +19,9 @@ var (
 func NewHTTPClient(timeout time.Duration) *Client {
 	once.Do(func() {
 		httpClient = http.Client{
-			Timeout:   timeout,
-			Transport: newConntrackRoundTripper(),
+			Timeout: timeout,
 		}
 	})
 
 	return &Client{Client: &httpClient}
-}
-
-// NewTinkoffHttpClient - отдельный HTTP клиент для API Тинькофф
-func NewTinkoffHttpClient(timeout time.Duration) *Client {
-	return &Client{
-		Client: &http.Client{
-			Timeout:   timeout,
-			Transport: newTinkoffHttpClientRoundTripper(),
-		},
-	}
 }

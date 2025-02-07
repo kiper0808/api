@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/kiper0808/s3/internal/gateway/domain"
+	"github.com/kiper0808/api/internal/gateway/domain"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

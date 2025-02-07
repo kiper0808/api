@@ -23,6 +23,7 @@ services:
     ports:
       - "8080:80"
     environment:
+      - SERVER_SWAGGER_ENABLED=${SERVER_SWAGGER_ENABLED}
       - ENV_NAME=${ENV_NAME}
       - API_VERSION=${API_VERSION}
       - FILE_STORAGE_SECRET=${FILE_STORAGE_SECRET}

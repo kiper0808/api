@@ -24,43 +24,31 @@ type uploadFileResponse struct {
 // @ModuleID files
 // @Accept multipart/form-data
 // @Produce  json
-// @Param X-Idempotency-Key header string true "Idempotency Key"
 // @Param file formData file true "File to upload"
 // @Success 201 {object} uploadFileResponse
-// @Failure 400 {object} ErrorStruct
+// @Failure 400
 // @Router /files [post]
 // @Security Bearer
 func (h *Handler) uploadFile(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// Получаем ключ идемпотентности
-	idempotencyKey := c.GetHeader("X-Idempotency-Key")
-	if idempotencyKey == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing idempotency key"})
-		return
-	}
-
-	// Проверка, использовался ли этот ключ (эмуляция)
-	// В реальном приложении здесь должна быть проверка в БД или Redis
-	if idempotencyKey == "used-key" {
-		c.JSON(http.StatusConflict, gin.H{"error": "Duplicate request"})
-		return
-	}
-
-	// Получаем файл
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Error("form file failed", zap.Error(err))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	err = h.services.Storage.UploadFile(ctx, file)
+	uploadResponse, err := h.services.Storage.UploadFile(ctx, file)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Error("upload file failed", zap.Error(err))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, &uploadFileResponse{
+		ID: uploadResponse.ID,
+	})
 }
 
 // @Summary Скачивание файла
@@ -71,7 +59,7 @@ func (h *Handler) uploadFile(c *gin.Context) {
 // @Produce  json
 // @Param	id	path		string		true	"ID файла"
 // @Success 200
-// @Failure 400 {object} ErrorStruct
+// @Failure 400
 // @Router /files/{id} [get]
 // @Security Bearer
 func (h *Handler) downloadFile(c *gin.Context) {
@@ -79,6 +67,7 @@ func (h *Handler) downloadFile(c *gin.Context) {
 	fileIDStr := c.Param("id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
+		h.logger.Error("parse file id failed", zap.Error(err))
 		c.AbortWithStatus(http.StatusBadRequest)
 	}
 
@@ -89,7 +78,5 @@ func (h *Handler) downloadFile(c *gin.Context) {
 	}
 
 	reader := bytes.NewReader(data)
-
-	// Отправляем файл потоково
 	c.DataFromReader(http.StatusOK, reader.Size(), "application/octet-stream", reader, nil)
 }

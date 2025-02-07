@@ -1,4 +1,4 @@
-module github.com/kiper0808/s3
+module github.com/kiper0808/api
 
 go 1.22
 

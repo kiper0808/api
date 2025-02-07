@@ -15,12 +15,10 @@ func (h *Handler) initMetricsRoutes(api *gin.RouterGroup) {
 // @Tags metrics
 // @Description Статус хранилища
 // @ModuleID metrics
-// @Accept
 // @Produce  json
-// @Param X-Idempotency-Key header string true "Idempotency Key"
 // @Param file formData file true "File to upload"
 // @Success 200
-// @Failure 400 {object} ErrorStruct
+// @Failure 400
 // @Router /metrics [get]
 // @Security Bearer
 func (h *Handler) metrics(c *gin.Context) {

@@ -3,7 +3,7 @@ package docs
 
 import "github.com/swaggo/swag"
 
-const docTemplateapi = `{
+const docTemplategateway = `{
     "schemes": {{ marshal .Schemes }},
     "swagger": "2.0",
     "info": {
@@ -35,13 +35,6 @@ const docTemplateapi = `{
                 "summary": "Загрузка файла",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Idempotency Key",
-                        "name": "X-Idempotency-Key",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "file",
                         "description": "File to upload",
                         "name": "file",
@@ -50,17 +43,14 @@ const docTemplateapi = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/v1.uploadFileResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorStruct"
-                        }
+                        "description": "Bad Request"
                     }
                 }
             }
@@ -97,27 +87,13 @@ const docTemplateapi = `{
                         "description": "OK"
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorStruct"
-                        }
+                        "description": "Bad Request"
                     }
                 }
             }
         }
     },
     "definitions": {
-        "ErrorStruct": {
-            "type": "object",
-            "properties": {
-                "error_code": {
-                    "type": "integer"
-                },
-                "error_message": {
-                    "type": "string"
-                }
-            }
-        },
         "v1.uploadFileResponse": {
             "type": "object",
             "required": [
@@ -140,20 +116,20 @@ const docTemplateapi = `{
     }
 }`
 
-// SwaggerInfoapi holds exported Swagger Info so clients can modify it
-var SwaggerInfoapi = &swag.Spec{
+// SwaggerInfogateway holds exported Swagger Info so clients can modify it
+var SwaggerInfogateway = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Karma8 Test FileStorage",
-	Description:      "API for Karma8 Test FileStorage",
-	InfoInstanceName: "api",
-	SwaggerTemplate:  docTemplateapi,
+	Title:            "Karma8 Gateway Service",
+	Description:      "API for Karma8 Gateway Service",
+	InfoInstanceName: "gateway",
+	SwaggerTemplate:  docTemplategateway,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",
 }
 
 func init() {
-	swag.Register(SwaggerInfoapi.InstanceName(), SwaggerInfoapi)
+	swag.Register(SwaggerInfogateway.InstanceName(), SwaggerInfogateway)
 }

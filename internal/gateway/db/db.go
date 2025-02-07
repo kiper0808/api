@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"github.com/kiper0808/s3/internal/gateway/config"
+	"github.com/kiper0808/api/internal/gateway/config"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -11,8 +11,6 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelsqlx"
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 )
-
-const DuplicateEntry = 1062
 
 func New(cfg config.Database) (*sqlx.DB, error) {
 	location, err := time.LoadLocation(cfg.TimeZone)

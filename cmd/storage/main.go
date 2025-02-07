@@ -3,34 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
+	delivery "github.com/kiper0808/api/internal/storage/api"
 	"github.com/kiper0808/api/internal/storage/config"
-	delivery "github.com/kiper0808/s3/internal/gateway/api"
-	"github.com/kiper0808/s3/internal/gateway/db"
-	"github.com/kiper0808/s3/internal/gateway/log"
-	"github.com/kiper0808/s3/internal/gateway/metrics"
-	"github.com/kiper0808/s3/internal/gateway/repository"
-	http3 "github.com/kiper0808/s3/internal/gateway/server/http"
-	"github.com/kiper0808/s3/internal/gateway/service"
-	"github.com/kiper0808/s3/internal/storage/service/minio_storage"
+	"github.com/kiper0808/api/internal/storage/db"
+	"github.com/kiper0808/api/internal/storage/log"
+	"github.com/kiper0808/api/internal/storage/repository"
+	http3 "github.com/kiper0808/api/internal/storage/server/http"
+	"github.com/kiper0808/api/internal/storage/service"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	fileStorage "github.com/kiper0808/api/internal/service/minio_storage"
+	"github.com/kiper0808/api/internal/storage/service/minio_storage"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
-
-	http2 "github.com/kiper0808/s3/pkg/http"
-
+	http2 "github.com/kiper0808/api/pkg/http"
 	"go.uber.org/zap"
 )
 
 func main() {
 	const exitFailed = 1
 
-	fmt.Println("run dostavkee backend") //nolint
+	fmt.Println("run karma8 storage backend") //nolint
 
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -41,7 +35,7 @@ func main() {
 	logger := log.NewLogger(cfg.LogLevel)
 
 	if err := run(cfg, logger); err != nil {
-		logger.Error("dostavkee service: problem while trying to start / graceful shutdown server", zap.Error(err))
+		logger.Error("karma8 storage service: problem while trying to start / graceful shutdown server", zap.Error(err))
 		os.Exit(exitFailed)
 	}
 }
@@ -71,16 +65,6 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 	}
 	defer dbMysql.Close()
 
-	dbCollector := collectors.NewDBStatsCollector(dbMysql.DB, cfg.Database.DBName)
-
-	if err := registerCollectors(dbCollector); err != nil {
-		logger.Fatal("register collectors failed: %w", zap.Error(err))
-	}
-
-	if err := metrics.RegisterMetrics(); err != nil {
-		logger.Fatal("register metrics problem: %w", zap.Error(err))
-	}
-
 	globalHttpClient := http2.NewHTTPClient(cfg.StandardHttpClient.Timeout)
 
 	minioStorageClient, err := minio_storage.NewClient(&cfg.MinioStorage, globalHttpClient.Client)
@@ -88,7 +72,7 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 		logger.Fatal("create file storage client: %w", zap.Error(err))
 	}
 
-	// services, workers, repos & API Handlers
+	// services, repos & API Handlers
 	repos := repository.NewRepositories(dbMysql, logger)
 
 	services := service.NewServices(&service.Deps{
@@ -96,7 +80,7 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 		HttpClient:        globalHttpClient,
 		Repos:             repos,
 		Config:            cfg,
-		FileStorageClient: fileStorageClient,
+		FileStorageClient: minioStorageClient,
 	})
 	handlers := delivery.NewHandler(services,
 		logger,
@@ -132,14 +116,5 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 
 	wg.Wait()
 	logger.Info("app stopped")
-	return nil
-}
-
-func registerCollectors(promCollectors ...prometheus.Collector) error {
-	for i := range promCollectors {
-		if err := prometheus.Register(promCollectors[i]); err != nil {
-			return fmt.Errorf("prometheus collector register fail: %w", err)
-		}
-	}
 	return nil
 }

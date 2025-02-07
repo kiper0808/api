@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/kiper0808/s3/internal/gateway/config"
+	"github.com/kiper0808/api/internal/gateway/config"
 	"net"
 	"net/http"
 

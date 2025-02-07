@@ -4,12 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/kiper0808/s3/internal/service"
+	"github.com/kiper0808/api/internal/storage/service"
 )
 
-// @title Karma8 Test FileStorage
+// @title Karma8 Storage Service
 // @version 1.0
-// @description API for Karma8 Test FileStorage
+// @description API for Karma8 StorageService
 
 // @BasePath /api/v1
 // @securityDefinitions.apikey Bearer

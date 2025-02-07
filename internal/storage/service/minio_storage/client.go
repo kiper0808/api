@@ -12,7 +12,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
-	"github.com/kiper0808/s3/internal/config"
+	"github.com/kiper0808/api/internal/storage/config"
 )
 
 type minioStorageClient struct {
@@ -41,22 +41,6 @@ func NewClient(cfg *config.MinioStorage, httpClient *http.Client) (*minioStorage
 		minioClient: minioClient,
 		config:      cfg,
 	}, nil
-}
-
-const (
-	fileTypeService string = "service"
-	ApiPath         string = "/api/v1/files"
-	defaultXApp     string = "dostavkee"
-)
-
-type UploadResponse struct {
-	Uuid *uuid.UUID          `json:"uuid,omitempty"`
-	Meta *MetaUploadResponse `json:"meta,omitempty"`
-}
-
-type MetaUploadResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
 }
 
 func (c *minioStorageClient) Upload(ctx context.Context, fileHeader *multipart.FileHeader, objectID uuid.UUID) error {
