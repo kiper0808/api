@@ -8,6 +8,17 @@ GREEN=\033[1;32m
 PURPLE=\033[1;35m
 NC=\033[0m
 
+# make mocks
+mock:
+	@echo 'generate mocks'
+	go generate ./internal/gateway/service
+	go generate ./internal/gateway/service/file_storage
+
+# make tests
+test:
+	@echo 'run tests'
+	go test -v -cover ./internal/gateway/... ./internal/storage/...
+
 # compose deps
 compose:
 	@echo 'compose deps'

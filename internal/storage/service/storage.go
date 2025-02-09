@@ -48,31 +48,6 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 }
 
 func (s *serviceStorage) DownloadFile(ctx context.Context, fileID uuid.UUID) (*minio.Object, error) {
-	//request, err := http.NewRequestWithContext(ctx, http.MethodGet, pdfUrl, http.NoBody)
-	//if err != nil {
-	//	return nil, fmt.Errorf("create request failed: %w", err)
-	//}
-	//
-	//response, err := http.DefaultClient.Do(request)
-	//if err != nil {
-	//	return nil, fmt.Errorf("do request failed: %w", err)
-	//}
-	//
-	//defer response.Body.Close()
-	//
-	//pdfBytes, err := io.ReadAll(response.Body)
-	//if err != nil {
-	//	return nil, fmt.Errorf("read response body failed: %w", err)
-	//}
-	//
-	//fileUUID, err := s.fileStorageClient.Upload(ctx, pdfBytes)
-	//if err != nil {
-	//	metrics.IncFileStorageUploadCounter(metrics.StatusFailed)
-	//	return nil, fmt.Errorf("upload to file storage failed: %w", err)
-	//}
-	//
-	//metrics.IncFileStorageUploadCounter(metrics.StatusSuccessful)
-	//return fileUUID, nil
 	object, err := s.minioStorageClient.Download(ctx, fileID)
 	if err != nil {
 		return nil, fmt.Errorf("file storage client download err: %w", err)

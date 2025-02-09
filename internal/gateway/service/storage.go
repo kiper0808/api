@@ -27,7 +27,7 @@ type serviceStorage struct {
 	chunkRepository   repository.Chunk
 	httpClient        *client.Client
 	logger            *zap.Logger
-	fileStorageClient fileStorage.Client
+	fileStorageClient file_storage.Client
 }
 
 const chunks = 6
@@ -36,7 +36,7 @@ func newStorageService(httpClient *client.Client,
 	logger *zap.Logger,
 	storageRepository repository.Storage,
 	chunkRepository repository.Chunk,
-	fileStorageClient fileStorage.Client,
+	fileStorageClient file_storage.Client,
 ) *serviceStorage {
 	return &serviceStorage{
 		storageRepository: storageRepository,
@@ -171,6 +171,10 @@ func (s *serviceStorage) DownloadFile(ctx context.Context, fileID uuid.UUID) ([]
 	return resultFile, nil
 }
 
+type FileStorageData interface {
+	UsagePercentage() float64
+}
+
 type StorageData struct {
 	ID        uuid.UUID
 	Hostname  string
@@ -181,7 +185,7 @@ type StorageData struct {
 func (m *StorageData) UsagePercentage() float64 {
 	total := m.FreeBytes + m.UsedBytes
 	if total == 0 {
-		return 0 // Если диска нет, считаем 0% использования
+		return 0
 	}
 	return (m.UsedBytes / total) * 100
 }
@@ -207,10 +211,10 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 		wg.Add(1)
 		go func(ctx context.Context, storage domain.Storage) {
 			defer wg.Done()
-			data, err := s.getMetrics(ctx, &storage)
+			data, err := s.GetMetrics(ctx, &storage)
 			if err != nil {
 				errCh <- fmt.Errorf("get metrics err: %w", err)
-				cancel() // Прерываем остальные горутины
+				cancel()
 				return
 			}
 			mu.Lock()
@@ -219,15 +223,14 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 		}(ctx, storage)
 	}
 
-	// Ждём завершения всех горутин
 	go func() {
 		wg.Wait()
-		close(errCh) // Закрываем канал после завершения всех горутин
+		close(errCh)
 	}()
 
 	for err := range errCh {
 		if err != nil {
-			return nil, err // Немедленный выход при первой ошибке
+			return nil, err
 		}
 	}
 
@@ -242,7 +245,7 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 	return storageData[:chunks], nil
 }
 
-func (s *serviceStorage) getMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error) {
+func (s *serviceStorage) GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error) {
 	body, err := s.fileStorageClient.GetMetrics(ctx, storage.Hostname)
 	if err != nil {
 		return nil, fmt.Errorf("get metrics err: %w", err)

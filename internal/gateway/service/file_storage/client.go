@@ -1,4 +1,4 @@
-package fileStorage
+package file_storage
 
 import (
 	"bytes"
@@ -18,6 +18,7 @@ type fileStorageClient struct {
 	cfg        config.FileStorage
 }
 
+//go:generate mockgen -destination=mocks/mock_file_storage.go -package=mocks github.com/kiper0808/api/internal/gateway/service/file_storage Client
 type Client interface {
 	Upload(ctx context.Context, file []byte, hostname string, chunkID uuid.UUID) error
 	Download(ctx context.Context, hostname string, fileID uuid.UUID) ([]byte, error)

@@ -66,7 +66,7 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 
 	globalHttpClient := http2.NewHTTPClient(cfg.StandardHttpClient.Timeout)
 
-	fileStorageClient, err := fileStorage.NewClient(globalHttpClient.Client, cfg.FileStorage)
+	fileStorageClient, err := file_storage.NewClient(globalHttpClient.Client, cfg.FileStorage)
 	if err != nil {
 		logger.Fatal("create file storage client: %w", zap.Error(err))
 	}

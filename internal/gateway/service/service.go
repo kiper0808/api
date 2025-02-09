@@ -23,14 +23,15 @@ type Deps struct {
 	Repos             *repository.Repositories
 	HttpClient        *http.Client
 	Config            *config.Config
-	FileStorageClient fileStorage.Client
+	FileStorageClient file_storage.Client
 }
 
+//go:generate mockgen -destination=mocks/mock_storage.go -package=mocks github.com/kiper0808/api/internal/gateway/service Storage
 type Storage interface {
 	UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error)
 	DownloadFile(ctx context.Context, id uuid.UUID) ([]byte, error)
 	getStoragesWithMetrics(ctx context.Context) ([]StorageData, error)
-	getMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error)
+	GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error)
 }
 
 func NewServices(deps *Deps) *Services {

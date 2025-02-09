@@ -6,6 +6,8 @@
 2. `make migrate` - установка миграций
 
 ## Дополнительно
+- `make test` - запуск тестов
+- `make mock` - генерация моков
 - `make swag` - генерация сваггер документации
 - `make migrate` - запуск миграций
 - `make migrate-down` - rollback миграций
