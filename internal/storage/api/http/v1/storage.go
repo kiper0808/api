@@ -15,7 +15,7 @@ func (h *Handler) initStorageRoutes(api *gin.RouterGroup) {
 }
 
 type uploadFileResponse struct {
-	ID uuid.UUID `json:"id" binding:"required"`
+	ID uuid.UUID `json:"id" binding:"required" format:"uuid"`
 }
 
 // @Summary Загрузка файла
@@ -24,7 +24,6 @@ type uploadFileResponse struct {
 // @ModuleID files
 // @Accept multipart/form-data
 // @Produce  json
-// @Param X-Idempotency-Key header string true "Idempotency Key"
 // @Param file formData file true "File to upload"
 // @Success 201 {object} uploadFileResponse
 // @Failure 400

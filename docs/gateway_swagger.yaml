@@ -3,6 +3,7 @@ definitions:
   v1.uploadFileResponse:
     properties:
       id:
+        format: uuid
         type: string
     required:
     - id
@@ -63,7 +64,6 @@ paths:
       - files
 securityDefinitions:
   Bearer:
-    description: Type "Bearer" followed by a space and JWT token.
     in: header
     name: Authorization
     type: apiKey

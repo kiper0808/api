@@ -3,6 +3,7 @@ definitions:
   v1.uploadFileResponse:
     properties:
       id:
+        format: uuid
         type: string
     required:
     - id
@@ -19,11 +20,6 @@ paths:
       - multipart/form-data
       description: Загрузка файла
       parameters:
-      - description: Idempotency Key
-        in: header
-        name: X-Idempotency-Key
-        required: true
-        type: string
       - description: File to upload
         in: formData
         name: file
@@ -68,13 +64,7 @@ paths:
       - files
   /metrics:
     get:
-      description: Статус хранилища
-      parameters:
-      - description: File to upload
-        in: formData
-        name: file
-        required: true
-        type: file
+      description: Метрики хранилища
       produces:
       - application/json
       responses:
@@ -82,9 +72,7 @@ paths:
           description: OK
         "400":
           description: Bad Request
-      security:
-      - Bearer: []
-      summary: Статус хранилища
+      summary: Метрики хранилища
       tags:
       - metrics
 securityDefinitions:

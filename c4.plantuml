@@ -1,0 +1,16 @@
+@startuml
+"customer" -> "api": Upload file via Postman
+"api" -> "storage": Upload file chunks
+"storage" -> "minio"
+"api" -> "storage"
+"storage" -> "minio"
+"api" -> "storage"
+"storage" -> "minio"
+"api" -> "storage"
+"storage" -> "minio"
+"api" -> "storage"
+"storage" -> "minio"
+"api" -> "storage"
+"storage" -> "minio"
+"api" -> "customer": 201 Created {"file_id: uuid}
+@enduml

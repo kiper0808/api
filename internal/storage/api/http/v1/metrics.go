@@ -11,16 +11,14 @@ func (h *Handler) initMetricsRoutes(api *gin.RouterGroup) {
 	api.GET("/metrics", h.metrics)
 }
 
-// @Summary Статус хранилища
+// @Summary Метрики хранилища
 // @Tags metrics
-// @Description Статус хранилища
+// @Description Метрики хранилища
 // @ModuleID metrics
 // @Produce  json
-// @Param file formData file true "File to upload"
 // @Success 200
 // @Failure 400
 // @Router /metrics [get]
-// @Security Bearer
 func (h *Handler) metrics(c *gin.Context) {
 	ctx := c.Request.Context()
 

@@ -5,8 +5,6 @@ import (
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 
 	v1 "github.com/kiper0808/api/internal/storage/api/http/v1"
@@ -44,10 +42,6 @@ func (h *Handler) Init(cfg *config.Config) *gin.Engine {
 		gin.Recovery(),
 		ginzap.Ginzap(h.logger, time.RFC3339, true),
 	)
-
-	if cfg.Server.SwaggerEnabled {
-		router.GET("/swagger/storage/*any", ginSwagger.WrapHandler(swaggerfiles.NewHandler(), ginSwagger.InstanceName("storage")))
-	}
 
 	h.initAPI(router)
 

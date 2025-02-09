@@ -15,7 +15,7 @@ func (h *Handler) initStorageRoutes(api *gin.RouterGroup) {
 }
 
 type uploadFileResponse struct {
-	ID uuid.UUID `json:"id" binding:"required"`
+	ID uuid.UUID `json:"id" binding:"required" format:"uuid"`
 }
 
 // @Summary Загрузка файла

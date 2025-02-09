@@ -35,13 +35,6 @@ const docTemplatestorage = `{
                 "summary": "Загрузка файла",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Idempotency Key",
-                        "name": "X-Idempotency-Key",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "file",
                         "description": "File to upload",
                         "name": "file",
@@ -101,28 +94,14 @@ const docTemplatestorage = `{
         },
         "/metrics": {
             "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Статус хранилища",
+                "description": "Метрики хранилища",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "metrics"
                 ],
-                "summary": "Статус хранилища",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
+                "summary": "Метрики хранилища",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -142,7 +121,8 @@ const docTemplatestorage = `{
             ],
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uuid"
                 }
             }
         }

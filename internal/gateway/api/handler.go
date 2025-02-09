@@ -43,6 +43,7 @@ func (h *Handler) Init(cfg *config.Config) *gin.Engine {
 
 	if cfg.Server.SwaggerEnabled {
 		router.GET("/swagger/gateway/*any", ginSwagger.WrapHandler(swaggerfiles.NewHandler(), ginSwagger.InstanceName("gateway")))
+		router.GET("/swagger/storage/*any", ginSwagger.WrapHandler(swaggerfiles.NewHandler(), ginSwagger.InstanceName("storage")))
 	}
 
 	h.initAPI(router)
