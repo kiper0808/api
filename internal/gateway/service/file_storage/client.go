@@ -20,7 +20,7 @@ type fileStorageClient struct {
 
 //go:generate mockgen -destination=mocks/mock_file_storage.go -package=mocks github.com/kiper0808/api/internal/gateway/service/file_storage Client
 type Client interface {
-	Upload(ctx context.Context, file []byte, hostname string, chunkID uuid.UUID) error
+	Upload(ctx context.Context, partReader io.Reader, hostname string, chunkID uuid.UUID) error
 	Download(ctx context.Context, hostname string, fileID uuid.UUID) ([]byte, error)
 	GetMetrics(ctx context.Context, hostname string) ([]byte, error)
 }
@@ -48,7 +48,7 @@ type MetaUploadResponse struct {
 }
 
 // Upload загружает файл с использованием multipart/form-data
-func (c *fileStorageClient) Upload(ctx context.Context, file []byte, hostname string, chunkID uuid.UUID) error {
+func (c *fileStorageClient) Upload(ctx context.Context, partReader io.Reader, hostname string, chunkID uuid.UUID) error {
 	// Буфер для тела запроса
 	var requestBody bytes.Buffer
 	writer := multipart.NewWriter(&requestBody) // Автоматически создаёт boundary
@@ -60,7 +60,7 @@ func (c *fileStorageClient) Upload(ctx context.Context, file []byte, hostname st
 	}
 
 	// Копируем содержимое файла в multipart-часть
-	_, err = io.Copy(part, bytes.NewReader(file))
+	_, err = io.Copy(part, partReader)
 	if err != nil {
 		return fmt.Errorf("не удалось записать файл в multipart: %w", err)
 	}

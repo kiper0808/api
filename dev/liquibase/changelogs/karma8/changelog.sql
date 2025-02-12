@@ -32,3 +32,11 @@ INSERT INTO storage (id, hostname) VALUES
     (UUID_TO_BIN('6b7c8d9e-0f1a-2b3c-4d5e-6f7a8b9c0d1e'), 'karma8-storage6');
 
 --rollback truncate storage;
+
+--changeset kiper0808:KRM-003
+INSERT INTO storage (id, hostname) VALUES
+    (UUID_TO_BIN('1f4a9b6a-5d8e-4b6e-b4a5-5fd7cbb24e12'), 'karma8-storage7'),
+    (UUID_TO_BIN('2d3c4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f'), 'karma8-storage8'),
+    (UUID_TO_BIN('3e4f5a6b-7c8d-9e0f-1a2b-3c4d5e6f7a8b'), 'karma8-storage9'),
+    (UUID_TO_BIN('4f5a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8b9c'), 'karma8-storage10');
+--rollback truncate storage;

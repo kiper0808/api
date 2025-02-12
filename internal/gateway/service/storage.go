@@ -30,8 +30,6 @@ type serviceStorage struct {
 	fileStorageClient file_storage.Client
 }
 
-const chunks = 6
-
 func newStorageService(httpClient *client.Client,
 	logger *zap.Logger,
 	storageRepository repository.Storage,
@@ -79,8 +77,15 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 		return nil, fmt.Errorf("cant get storages: %w", err)
 	}
 
+	// Определяем количество чанков в зависимости от размера файла
+	chunks := s.calculateChunksCount(file.Size)
+
+	if len(storages) < chunks {
+		return nil, fmt.Errorf("not enough storages available")
+	}
+
 	// Определяем размер чанка
-	partSize := (file.Size + chunks - 1) / chunks
+	partSize := (file.Size + int64(chunks) - 1) / int64(chunks)
 	if partSize < 1 {
 		partSize = 1
 	}
@@ -92,81 +97,75 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 	}
 	defer fileReader.Close()
 
-	// Канал ошибок и WaitGroup для параллельной загрузки
 	var wg sync.WaitGroup
 	errCh := make(chan error, chunks)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	buf := make([]byte, partSize) // Буфер для чтения каждого чанка
-
+	// Читаем чанки и загружаем их
 	for i := 0; i < chunks; i++ {
-		if i >= len(storages) { // Проверяем, что у нас достаточно хранилищ
+		if i >= len(storages) {
 			return nil, fmt.Errorf("not enough storages available")
 		}
 
-		n, err := fileReader.Read(buf)
-		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("error reading fake file: %w", err)
-		}
-		if n == 0 {
-			break
-		}
-
-		partCopy := append([]byte(nil), buf[:n]...) // Копируем данные
 		hostname := storages[i].Hostname
-		wg.Add(1)
+		chunkID := uuid.New()
+		partReader := io.LimitReader(fileReader, partSize) // Ограничиваем чтение чанка
 
-		// Запуск асинхронной горутины для загрузки чанка
-		go func(hostname string, partCopy []byte, i int) {
+		wg.Add(1)
+		go func(hostname string, partReader io.Reader, chunkID uuid.UUID, i int) {
 			defer wg.Done()
 
-			chunkID := uuid.New()
-
-			// Загружаем чанк на хранилище
-			if err := s.fileStorageClient.Upload(ctx, partCopy, hostname, chunkID); err != nil {
-				select {
-				case errCh <- fmt.Errorf("cant upload chunk: %w", err):
-				default:
-				}
+			// Загружаем чанк
+			if err := s.fileStorageClient.Upload(ctx, partReader, hostname, chunkID); err != nil {
+				errCh <- fmt.Errorf("can't upload chunk: %w", err)
 				cancel()
 				return
 			}
 
-			// Сохраняем информацию о чанке в базе данных
-			err := s.chunkRepository.Create(ctx, &domain.Chunk{
+			// Сохраняем метаданные в БД
+			if err := s.chunkRepository.Create(ctx, &domain.Chunk{
 				ID:              chunkID,
 				FileID:          fileID,
 				Part:            i,
 				StorageHostname: hostname,
-			})
-			if err != nil {
-				select {
-				case errCh <- fmt.Errorf("cant save chunk info: %w", err):
-				default:
-				}
+			}); err != nil {
+				errCh <- fmt.Errorf("can't save chunk info: %w", err)
 				cancel()
 				return
 			}
-		}(hostname, partCopy, i)
+		}(hostname, partReader, chunkID, i)
 	}
 
-	// Ожидание завершения всех горутин
+	// Ждём завершения всех горутин
 	go func() {
 		wg.Wait()
 		close(errCh)
 	}()
 
-	// Проверка ошибок после завершения всех горутин
+	// Обрабатываем ошибки
 	for err := range errCh {
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &File{
-		ID: fileID,
-	}, nil
+	return &File{ID: fileID}, nil
+}
+
+func (s *serviceStorage) calculateChunksCount(fileSize int64) int {
+	// Расчет количества чанков на основе размера файла
+	if fileSize <= 1*1024*1024*1024 { // 1 GB
+		return 6
+	} else if fileSize <= 3*1024*1024*1024 { // 3 GB
+		return 7
+	} else if fileSize <= 5*1024*1024*1024 { // 5 GB
+		return 8
+	} else if fileSize <= 7*1024*1024*1024 { // 7 GB
+		return 9
+	}
+
+	return 10
 }
 
 type fileChunk struct {
@@ -307,11 +306,11 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 		return storageData[i].UsagePercentage() < storageData[j].UsagePercentage()
 	})
 
-	if len(storageData) < chunks {
+	if len(storageData) < 6 {
 		return nil, fmt.Errorf("not enough storages available")
 	}
 
-	return storageData[:chunks], nil
+	return storageData[:6], nil
 }
 
 func (s *serviceStorage) GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error) {

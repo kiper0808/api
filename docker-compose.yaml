@@ -5,6 +5,10 @@ volumes:
   minio4_data:
   minio5_data:
   minio6_data:
+  minio7_data:
+  minio8_data:
+  minio9_data:
+  minio10_data:
 
 networks:
   karma8:
@@ -187,6 +191,106 @@ services:
     restart: on-failure
     networks:
       - karma8
+  storage7:
+    container_name: karma8-storage7
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.storage
+    ports:
+      - "8087:80"
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - API_VERSION=${API_VERSION}
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - REDIS_TYPE=${REDIS_TYPE}
+      - MINIO_STORAGE_HOST=${MINIO_STORAGE_7_HOST}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
+      - REDIS_ADDR=${REDIS_ADDR}
+    depends_on:
+      - mysql
+      - redis
+      - minio7
+    restart: on-failure
+    networks:
+      - karma8
+  storage8:
+    container_name: karma8-storage8
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.storage
+    ports:
+      - "8088:80"
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - API_VERSION=${API_VERSION}
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - REDIS_TYPE=${REDIS_TYPE}
+      - MINIO_STORAGE_HOST=${MINIO_STORAGE_8_HOST}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
+      - REDIS_ADDR=${REDIS_ADDR}
+    depends_on:
+      - mysql
+      - redis
+      - minio8
+    restart: on-failure
+    networks:
+      - karma8
+  storage9:
+    container_name: karma8-storage9
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.storage
+    ports:
+      - "8089:80"
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - API_VERSION=${API_VERSION}
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - REDIS_TYPE=${REDIS_TYPE}
+      - MINIO_STORAGE_HOST=${MINIO_STORAGE_6_HOST}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
+      - REDIS_ADDR=${REDIS_ADDR}
+    depends_on:
+      - mysql
+      - redis
+      - minio9
+    restart: on-failure
+    networks:
+      - karma8
+  storage10:
+    container_name: karma8-storage10
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.storage
+    ports:
+      - "8090:80"
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - API_VERSION=${API_VERSION}
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - REDIS_TYPE=${REDIS_TYPE}
+      - MINIO_STORAGE_HOST=${MINIO_STORAGE_10_HOST}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
+      - REDIS_ADDR=${REDIS_ADDR}
+    depends_on:
+      - mysql
+      - redis
+      - minio10
+    restart: on-failure
+    networks:
+      - karma8
   redis:
     image: redis
     container_name: karma8-redis
@@ -224,24 +328,44 @@ services:
       /usr/bin/mc alias set myminio4 http://minio4:9000 minioadmin minioadmin;
       /usr/bin/mc alias set myminio5 http://minio5:9000 minioadmin minioadmin;
       /usr/bin/mc alias set myminio6 http://minio6:9000 minioadmin minioadmin;
+      /usr/bin/mc alias set myminio7 http://minio7:9000 minioadmin minioadmin;
+      /usr/bin/mc alias set myminio8 http://minio8:9000 minioadmin minioadmin;
+      /usr/bin/mc alias set myminio9 http://minio9:9000 minioadmin minioadmin;
+      /usr/bin/mc alias set myminio10 http://minio10:9000 minioadmin minioadmin;
       /usr/bin/mc mb myminio1/storage;
       /usr/bin/mc mb myminio2/storage;
       /usr/bin/mc mb myminio3/storage;
       /usr/bin/mc mb myminio4/storage;
       /usr/bin/mc mb myminio5/storage;
       /usr/bin/mc mb myminio6/storage;
+      /usr/bin/mc mb myminio7/storage;
+      /usr/bin/mc mb myminio8/storage;
+      /usr/bin/mc mb myminio9/storage;
+      /usr/bin/mc mb myminio10/storage;
       /usr/bin/mc policy set public myminio1/storage;
       /usr/bin/mc policy set public myminio2/storage;
       /usr/bin/mc policy set public myminio3/storage;
       /usr/bin/mc policy set public myminio4/storage;
       /usr/bin/mc policy set public myminio5/storage;
       /usr/bin/mc policy set public myminio6/storage;
+      /usr/bin/mc policy set public myminio7/storage;
+      /usr/bin/mc policy set public myminio8/storage;
+      /usr/bin/mc policy set public myminio9/storage;
+      /usr/bin/mc policy set public myminio10/storage;
       /usr/bin/mc admin prometheus generate play system --api-version v3 --public;   
       exit 0;
       "
     depends_on:
       - minio1
       - minio2
+      - minio3
+      - minio4
+      - minio5
+      - minio6
+      - minio7
+      - minio8
+      - minio9
+      - minio10
     networks:
       - karma8
 
@@ -346,5 +470,73 @@ services:
       - "9011:9001"
     volumes:
       - minio6_data:/data
+    networks:
+      - karma8
+  minio7:
+    image: minio/minio
+    container_name: karma8-minio7
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ACCESS_KEY=minioaccesskey
+      - MINIO_SECRET_KEY=miniosecretkey
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    ports:
+      - "9012:9000"
+      - "9013:9001"
+    volumes:
+      - minio7_data:/data
+    networks:
+      - karma8
+  minio8:
+    image: minio/minio
+    container_name: karma8-minio8
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ACCESS_KEY=minioaccesskey
+      - MINIO_SECRET_KEY=miniosecretkey
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    ports:
+      - "9014:9000"
+      - "9015:9001"
+    volumes:
+      - minio8_data:/data
+    networks:
+      - karma8
+  minio9:
+    image: minio/minio
+    container_name: karma8-minio9
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ACCESS_KEY=minioaccesskey
+      - MINIO_SECRET_KEY=miniosecretkey
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    ports:
+      - "9016:9000"
+      - "9017:9001"
+    volumes:
+      - minio9_data:/data
+    networks:
+      - karma8
+  minio10:
+    image: minio/minio
+    container_name: karma8-minio10
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ACCESS_KEY=minioaccesskey
+      - MINIO_SECRET_KEY=miniosecretkey
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    ports:
+      - "9018:9000"
+      - "9019:9001"
+    volumes:
+      - minio10_data:/data
     networks:
       - karma8
