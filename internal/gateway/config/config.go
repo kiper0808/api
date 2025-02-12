@@ -23,7 +23,7 @@ type FileStorage struct {
 }
 
 type StandardHttpClient struct {
-	Timeout time.Duration `env:"STANDARD_HTTP_CLIENT_TIMEOUT" env-default:"3s" env-description:"default timeout"`
+	Timeout time.Duration `env:"STANDARD_HTTP_CLIENT_TIMEOUT" env-default:"30s" env-description:"default timeout"`
 }
 
 type HttpServer struct {

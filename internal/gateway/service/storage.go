@@ -73,54 +73,67 @@ type File struct {
 func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error) {
 	fileID := uuid.New()
 
+	// Получаем хранилища с метриками
 	storages, err := s.getStoragesWithMetrics(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cant get storages: %w", err)
 	}
 
-	data, err := file.Open()
-	if err != nil {
-		return nil, fmt.Errorf("can't open file: %w", err)
-	}
-	defer data.Close()
-
-	fileData, err := io.ReadAll(data)
-	if err != nil {
-		return nil, fmt.Errorf("can't read file: %w", err)
-	}
-
-	fileSize := len(fileData)
-	partSize := fileSize / chunks
-	if partSize == 0 {
+	// Определяем размер чанка
+	partSize := (file.Size + chunks - 1) / chunks
+	if partSize < 1 {
 		partSize = 1
 	}
 
+	// Открываем файл, чтобы получить доступ к его содержимому
+	fileReader, err := file.Open()
+	if err != nil {
+		return nil, fmt.Errorf("cant open file: %w", err)
+	}
+	defer fileReader.Close()
+
+	// Канал ошибок и WaitGroup для параллельной загрузки
 	var wg sync.WaitGroup
 	errCh := make(chan error, chunks)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	buf := make([]byte, partSize) // Буфер для чтения каждого чанка
+
 	for i := 0; i < chunks; i++ {
-		start := i * partSize
-		end := start + partSize
-		if i == chunks-1 {
-			end = fileSize
+		if i >= len(storages) { // Проверяем, что у нас достаточно хранилищ
+			return nil, fmt.Errorf("not enough storages available")
 		}
 
-		partCopy := append([]byte(nil), fileData[start:end]...)
+		n, err := fileReader.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("error reading fake file: %w", err)
+		}
+		if n == 0 {
+			break
+		}
+
+		partCopy := append([]byte(nil), buf[:n]...) // Копируем данные
 		hostname := storages[i].Hostname
 		wg.Add(1)
 
+		// Запуск асинхронной горутины для загрузки чанка
 		go func(hostname string, partCopy []byte, i int) {
 			defer wg.Done()
+
 			chunkID := uuid.New()
 
+			// Загружаем чанк на хранилище
 			if err := s.fileStorageClient.Upload(ctx, partCopy, hostname, chunkID); err != nil {
-				errCh <- fmt.Errorf("cant upload chunk: %w", err)
+				select {
+				case errCh <- fmt.Errorf("cant upload chunk: %w", err):
+				default:
+				}
 				cancel()
 				return
 			}
 
+			// Сохраняем информацию о чанке в базе данных
 			err := s.chunkRepository.Create(ctx, &domain.Chunk{
 				ID:              chunkID,
 				FileID:          fileID,
@@ -128,18 +141,23 @@ func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHea
 				StorageHostname: hostname,
 			})
 			if err != nil {
-				errCh <- fmt.Errorf("cant save chunk info: %w", err)
+				select {
+				case errCh <- fmt.Errorf("cant save chunk info: %w", err):
+				default:
+				}
 				cancel()
 				return
 			}
 		}(hostname, partCopy, i)
 	}
 
+	// Ожидание завершения всех горутин
 	go func() {
 		wg.Wait()
 		close(errCh)
 	}()
 
+	// Проверка ошибок после завершения всех горутин
 	for err := range errCh {
 		if err != nil {
 			return nil, err
@@ -158,30 +176,63 @@ type fileChunk struct {
 }
 
 func (s *serviceStorage) DownloadFile(ctx context.Context, fileID uuid.UUID) ([]byte, error) {
+	// Получаем все чанки для данного файла
 	fileChunks, err := s.chunkRepository.GetAllByFileID(ctx, fileID)
 	if err != nil {
-		return nil, fmt.Errorf("cant get all chunks: %w", err)
+		return nil, fmt.Errorf("can't get all chunks: %w", err)
 	}
 
+	// Канал для хранения загруженных чанков
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 	var chunksWithFiles []*fileChunk
+	errCh := make(chan error, len(fileChunks))
+
+	// Загрузка чанков параллельно
 	for _, chunk := range fileChunks {
-		data, err := s.fileStorageClient.Download(ctx, chunk.StorageHostname, chunk.ID)
-		if err != nil {
-			return nil, fmt.Errorf("cant download file: %w", err)
-		}
-		chunksWithFiles = append(chunksWithFiles, &fileChunk{
-			ChunkID: chunk.ID,
-			Data:    data,
-			Part:    chunk.Part,
-		})
+		wg.Add(1)
+
+		go func(chunk domain.Chunk) {
+			defer wg.Done()
+
+			// Загружаем данные чанка
+			data, err := s.fileStorageClient.Download(ctx, chunk.StorageHostname, chunk.ID)
+			if err != nil {
+				errCh <- fmt.Errorf("can't download chunk (ID: %v): %w", chunk.ID, err)
+				return
+			}
+
+			// Записываем данные чанка в общий список
+			mu.Lock()
+			chunksWithFiles = append(chunksWithFiles, &fileChunk{
+				ChunkID: chunk.ID,
+				Data:    data,
+				Part:    chunk.Part,
+			})
+			mu.Unlock()
+		}(chunk)
 	}
 
+	// Ждем завершения всех горутин
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+
+	// Обработка ошибок
+	for err := range errCh {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Сортируем чанки по порядку
 	sort.Slice(chunksWithFiles, func(i, j int) bool {
 		return chunksWithFiles[i].Part < chunksWithFiles[j].Part
 	})
 
+	// Собираем весь файл из чанков
 	var resultFile []byte
-
 	for _, chunkWithFile := range chunksWithFiles {
 		resultFile = append(resultFile, chunkWithFile.Data...)
 	}
