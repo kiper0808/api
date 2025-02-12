@@ -69,7 +69,7 @@
 					}
 				],
 				"url": {
-					"raw": "localhost:8080/api/v1/files/31b5453d-f697-4d50-8b85-670364bf7f75",
+					"raw": "localhost:8080/api/v1/files/e46376f7-42a3-457d-b3e1-9ef44ee5cbe4",
 					"host": [
 						"localhost"
 					],
@@ -78,7 +78,7 @@
 						"api",
 						"v1",
 						"files",
-						"31b5453d-f697-4d50-8b85-670364bf7f75"
+						"e46376f7-42a3-457d-b3e1-9ef44ee5cbe4"
 					]
 				}
 			},
@@ -100,6 +100,41 @@
 						"metrics",
 						"v3",
 						"system"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add storage",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "secret",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"hostname\": \"storage7\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/api/v1/storage",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"storage"
 					]
 				}
 			},
