@@ -71,18 +71,20 @@ type File struct {
 func (s *serviceStorage) UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error) {
 	fileID := uuid.New()
 
+	// Определяем количество чанков в зависимости от размера файла
+	chunks := s.calculateChunksCount(file.Size)
+
 	// Получаем хранилища с метриками
-	storages, err := s.getStoragesWithMetrics(ctx)
+	storages, err := s.getStoragesWithMetrics(ctx, chunks)
 	if err != nil {
 		return nil, fmt.Errorf("cant get storages: %w", err)
 	}
 
-	// Определяем количество чанков в зависимости от размера файла
-	chunks := s.calculateChunksCount(file.Size)
-
 	if len(storages) < chunks {
 		return nil, fmt.Errorf("not enough storages available")
 	}
+
+	s.logger.Info("chunks", zap.Any("chunks", chunks), zap.Any("file_size", file.Size))
 
 	// Определяем размер чанка
 	partSize := (file.Size + int64(chunks) - 1) / int64(chunks)
@@ -261,7 +263,7 @@ func (m *StorageData) UsagePercentage() float64 {
 const metricMinioSystemDriveFreeBytes = "minio_system_drive_free_bytes"
 const metricMinioSystemDriveUsedBytes = "minio_system_drive_used_bytes"
 
-func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageData, error) {
+func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context, chunks int) ([]StorageData, error) {
 	storages, err := s.storageRepository.GetAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get all storages err: %w", err)
@@ -310,7 +312,7 @@ func (s *serviceStorage) getStoragesWithMetrics(ctx context.Context) ([]StorageD
 		return nil, fmt.Errorf("not enough storages available")
 	}
 
-	return storageData[:6], nil
+	return storageData[:chunks], nil
 }
 
 func (s *serviceStorage) GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error) {

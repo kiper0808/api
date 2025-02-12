@@ -31,7 +31,7 @@ type Storage interface {
 	AddStorage(ctx context.Context, storage *domain.Storage) error
 	UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error)
 	DownloadFile(ctx context.Context, id uuid.UUID) ([]byte, error)
-	getStoragesWithMetrics(ctx context.Context) ([]StorageData, error)
+	getStoragesWithMetrics(ctx context.Context, chunks int) ([]StorageData, error)
 	GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error)
 }
 

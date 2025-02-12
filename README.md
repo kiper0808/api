@@ -6,7 +6,7 @@
 2. `make migrate` - установка миграций
 
 # Добавление доп хранилища
-1. Создание storage и minio - `make add-storage STORAGE_HOSTNAME=storage7 STORAGE_API_PORT=8087 MINIO_STORAGE_HOST=karma8-minio7 MINIO_PORT=9012 MINIO_CONSOLE_PORT=9013 STORAGE_MINIO_PORT=9000 MINIO_ALIAS=myminio7 MINIO_CONTAINER_NAME=karma8-minio7`
+1. Создание storage и minio - `make add-storage STORAGE_HOSTNAME=storage11 STORAGE_API_PORT=8091 MINIO_STORAGE_HOST=karma8-minio11 MINIO_PORT=9020 MINIO_CONSOLE_PORT=9021 STORAGE_MINIO_PORT=9000 MINIO_ALIAS=myminio11 MINIO_CONTAINER_NAME=karma8-minio11`
 2. [POST] localhost:8080/api/v1/storage - добавление нового хранилища в БД
 
 ## Дополнительно
