@@ -21,6 +21,8 @@ type minioStorageClient struct {
 	config      *config.MinioStorage
 }
 
+const minioDefaultPort = ":9000"
+
 type Client interface {
 	GetMetrics(ctx context.Context) ([]byte, error)
 	Upload(ctx context.Context, file *multipart.FileHeader, objectID uuid.UUID) error
@@ -28,7 +30,7 @@ type Client interface {
 }
 
 func NewClient(cfg *config.MinioStorage, httpClient *http.Client) (*minioStorageClient, error) {
-	minioClient, err := minio.New(cfg.Host, &minio.Options{
+	minioClient, err := minio.New(cfg.Host+minioDefaultPort, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure: false,
 	})
@@ -71,7 +73,7 @@ func (c *minioStorageClient) Download(ctx context.Context, fileID uuid.UUID) (*m
 }
 
 func (c *minioStorageClient) GetMetrics(ctx context.Context) ([]byte, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+c.config.Host+"/minio/metrics/v3/system", nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+c.config.Host+minioDefaultPort+"/minio/metrics/v3/system", nil)
 	if err != nil {
 		return nil, fmt.Errorf("cant create request: %w", err)
 	}

@@ -13,7 +13,6 @@ import (
 	"github.com/kiper0808/api/pkg/http"
 
 	"github.com/kiper0808/api/internal/storage/config"
-	"github.com/kiper0808/api/internal/storage/repository"
 )
 
 type Services struct {
@@ -22,7 +21,6 @@ type Services struct {
 
 type Deps struct {
 	Logger            *zap.Logger
-	Repos             *repository.Repositories
 	HttpClient        *http.Client
 	Config            *config.Config
 	FileStorageClient minio_storage.Client
@@ -38,7 +36,6 @@ func NewServices(deps *Deps) *Services {
 	return &Services{
 		Storage: newStorageService(deps.HttpClient,
 			deps.Logger,
-			deps.Repos.Storage,
 			deps.FileStorageClient,
 			&deps.Config.MinioStorage,
 		),

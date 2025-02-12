@@ -47,6 +47,24 @@ func newStorageService(httpClient *client.Client,
 	}
 }
 
+func (s *serviceStorage) AddStorage(ctx context.Context, storage *domain.Storage) error {
+	exist, err := s.storageRepository.IsExist(ctx, storage.Hostname)
+	if err != nil {
+		return fmt.Errorf("cant check exist storage by hostname: %w", err)
+	}
+	if exist {
+		return ErrStorageAlreadyExists
+	}
+
+	v7, err := uuid.NewV7()
+	if err != nil {
+		return fmt.Errorf("cant generate uuid: %w", err)
+	}
+	storage.ID = v7
+
+	return s.storageRepository.Create(ctx, storage)
+}
+
 type File struct {
 	ID uuid.UUID `json:"id"`
 }

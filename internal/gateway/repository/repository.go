@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	domain2 "github.com/kiper0808/api/internal/gateway/domain"
-
 	"go.uber.org/zap"
 
 	"github.com/google/uuid"
@@ -30,8 +29,8 @@ type Db interface {
 
 type Storage interface {
 	Create(ctx context.Context, storage *domain2.Storage) error
-	GetByID(ctx context.Context, id uuid.UUID) (*domain2.Storage, error)
 	GetAll(ctx context.Context) ([]domain2.Storage, error)
+	IsExist(ctx context.Context, hostname string) (bool, error)
 }
 
 type Chunk interface {

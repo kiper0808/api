@@ -2,6 +2,9 @@ package v1
 
 import (
 	"bytes"
+	"errors"
+	"github.com/kiper0808/api/internal/gateway/domain"
+	"github.com/kiper0808/api/internal/gateway/service"
 	"go.uber.org/zap"
 	"net/http"
 
@@ -10,8 +13,50 @@ import (
 )
 
 func (h *Handler) initStorageRoutes(api *gin.RouterGroup) {
+	api.POST("/storage", h.serviceIdentityMiddleware, h.addStorage)
 	api.POST("/files", h.serviceIdentityMiddleware, h.uploadFile)
 	api.GET("/files/:id", h.downloadFile)
+}
+
+type addStorageRequest struct {
+	Hostname string `json:"hostname" binding:"required"`
+}
+
+// @Summary Добавление хранилища
+// @Tags storage
+// @Description Добавление хранилища
+// @ModuleID storage
+// @Accept  json addStorageRequest
+// @Produce  json
+// @Param file formData file true "File to upload"
+// @Success 200
+// @Failure 400
+// @Router /storage [post]
+// @Security Bearer
+func (h *Handler) addStorage(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var request addStorageRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.logger.Error("bind json failed", zap.Error(err))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err := h.services.Storage.AddStorage(ctx, &domain.Storage{
+		Hostname: request.Hostname,
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrStorageAlreadyExists) {
+			c.JSON(http.StatusOK, getErrorStruct(StorageAlreadyExistsCode))
+			return
+		}
+		h.logger.Error("add storage failed", zap.Error(err))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
 
 type uploadFileResponse struct {

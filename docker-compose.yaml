@@ -19,7 +19,7 @@ services:
     container_name: karma8-api
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.gateway
     ports:
       - "8080:80"
     environment:
@@ -39,7 +39,7 @@ services:
     container_name: karma8-storage1
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8081:80"
     environment:
@@ -49,9 +49,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_1_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_1_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_1_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_1_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql
@@ -65,7 +65,7 @@ services:
     container_name: karma8-storage2
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8082:80"
     environment:
@@ -75,9 +75,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_2_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_2_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_2_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_2_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql
@@ -91,7 +91,7 @@ services:
     container_name: karma8-storage3
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8083:80"
     environment:
@@ -101,9 +101,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_3_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_3_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_3_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_3_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql
@@ -116,7 +116,7 @@ services:
     container_name: karma8-storage4
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8084:80"
     environment:
@@ -126,9 +126,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_4_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_4_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_4_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_4_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql
@@ -141,7 +141,7 @@ services:
     container_name: karma8-storage5
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8085:80"
     environment:
@@ -151,9 +151,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_5_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_5_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_5_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_5_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql
@@ -166,7 +166,7 @@ services:
     container_name: karma8-storage6
     build:
       context: ./
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.storage
     ports:
       - "8086:80"
     environment:
@@ -176,9 +176,9 @@ services:
       - MYSQL_DBNAME=${MYSQL_DBNAME}
       - REDIS_TYPE=${REDIS_TYPE}
       - MINIO_STORAGE_HOST=${MINIO_STORAGE_6_HOST}
-      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_6_ACCESS_KEY}
-      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_6_SECRET_KEY}
-      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_6_BUCKET}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
       - REDIS_ADDR=${REDIS_ADDR}
     depends_on:
       - mysql

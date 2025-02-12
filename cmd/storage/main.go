@@ -5,9 +5,7 @@ import (
 	"fmt"
 	delivery "github.com/kiper0808/api/internal/storage/api"
 	"github.com/kiper0808/api/internal/storage/config"
-	"github.com/kiper0808/api/internal/storage/db"
 	"github.com/kiper0808/api/internal/storage/log"
-	"github.com/kiper0808/api/internal/storage/repository"
 	http3 "github.com/kiper0808/api/internal/storage/server/http"
 	"github.com/kiper0808/api/internal/storage/service"
 	"os"
@@ -58,13 +56,6 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 	// init wg
 	wg := &sync.WaitGroup{}
 
-	// init db
-	dbMysql, err := db.New(cfg.Database)
-	if err != nil {
-		logger.Fatal("mysql connect problem: %w", zap.Error(err))
-	}
-	defer dbMysql.Close()
-
 	globalHttpClient := http2.NewHTTPClient(cfg.StandardHttpClient.Timeout)
 
 	minioStorageClient, err := minio_storage.NewClient(&cfg.MinioStorage, globalHttpClient.Client)
@@ -72,13 +63,10 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 		logger.Fatal("create file storage client: %w", zap.Error(err))
 	}
 
-	// services, repos & API Handlers
-	repos := repository.NewRepositories(dbMysql, logger)
-
+	// services & API Handlers
 	services := service.NewServices(&service.Deps{
 		Logger:            logger,
 		HttpClient:        globalHttpClient,
-		Repos:             repos,
 		Config:            cfg,
 		FileStorageClient: minioStorageClient,
 	})

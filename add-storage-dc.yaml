@@ -1,0 +1,72 @@
+version: '3.7'
+
+services:
+  storage:
+    build:
+      context: ./
+      dockerfile: build/Dockerfile.storage
+    container_name: ${STORAGE_CONTAINER_NAME}
+    hostname: ${STORAGE_CONTAINER_NAME}
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - API_VERSION=${API_VERSION}
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - REDIS_TYPE=${REDIS_TYPE}
+      - MINIO_STORAGE_HOST=${MINIO_STORAGE_HOST}
+      - MINIO_STORAGE_ACCESS_KEY=${MINIO_STORAGE_ACCESS_KEY}
+      - MINIO_STORAGE_SECRET_KEY=${MINIO_STORAGE_SECRET_KEY}
+      - MINIO_STORAGE_BUCKET=${MINIO_STORAGE_BUCKET}
+      - REDIS_ADDR=${REDIS_ADDR}
+    ports:
+      - "${STORAGE_API_PORT}:80"
+    networks:
+      - karma8
+
+  minio:
+    image: minio/minio
+    hostname: ${MINIO_STORAGE_HOST}
+    container_name: ${MINIO_CONTAINER_NAME}
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ACCESS_KEY=minioaccesskey
+      - MINIO_SECRET_KEY=miniosecretkey
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - karma8
+
+  mc:
+    image: minio/mc:latest
+    container_name: minio-mc
+    depends_on:
+      - minio
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_STORAGE_HOST: ${MINIO_STORAGE_HOST}
+      MINIO_ALIAS: ${MINIO_ALIAS}
+      MINIO_CONTAINER_NAME: ${MINIO_CONTAINER_NAME}
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set $$MINIO_ALIAS http://$$MINIO_CONTAINER_NAME:9000 minioadmin minioadmin;
+        /usr/bin/mc mb $$MINIO_ALIAS/storage;
+        /usr/bin/mc policy set public $$MINIO_ALIAS/storage;
+        /usr/bin/mc admin prometheus generate play system --api-version v3 --public;
+        exit 0;
+      "
+    restart: "no"
+    networks:
+        - karma8
+
+networks:
+  karma8:
+    name: karma8
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16

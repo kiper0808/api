@@ -12,12 +12,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kiper0808/api/internal/storage/config"
-	"github.com/kiper0808/api/internal/storage/repository"
 	client "github.com/kiper0808/api/pkg/http"
 )
 
 type serviceStorage struct {
-	storageRepository  repository.Storage
 	httpClient         *client.Client
 	logger             *zap.Logger
 	minioStorageClient minio_storage.Client
@@ -26,12 +24,10 @@ type serviceStorage struct {
 
 func newStorageService(httpClient *client.Client,
 	logger *zap.Logger,
-	storageRepository repository.Storage,
 	minioStorageClient minio_storage.Client,
 	minioStorageConfig *config.MinioStorage,
 ) *serviceStorage {
 	return &serviceStorage{
-		storageRepository:  storageRepository,
 		httpClient:         httpClient,
 		logger:             logger,
 		minioStorageClient: minioStorageClient,
