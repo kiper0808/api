@@ -3,6 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"os/signal"
+	"runtime"
+	"runtime/pprof"
+	"sync"
+	"syscall"
+	"time"
+
 	delivery "github.com/kiper0808/api/internal/gateway/api"
 	"github.com/kiper0808/api/internal/gateway/config"
 	"github.com/kiper0808/api/internal/gateway/db"
@@ -11,10 +20,6 @@ import (
 	http3 "github.com/kiper0808/api/internal/gateway/server/http"
 	"github.com/kiper0808/api/internal/gateway/service"
 	"github.com/kiper0808/api/internal/gateway/service/file_storage"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 
 	http2 "github.com/kiper0808/api/pkg/http"
 	"go.uber.org/zap"
@@ -86,6 +91,8 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 		cfg.ApiVersion,
 	)
 
+	go memStats()
+
 	// init http servers
 	httpServer := http3.NewServer(logger, cfg.Server, handlers.Init(cfg))
 
@@ -115,4 +122,43 @@ func run(cfg *config.Config, logger *zap.Logger) error {
 	wg.Wait()
 	logger.Info("app stopped")
 	return nil
+}
+
+var maxMemAlloc uint64 = 20 * 1024 * 1024 // 50 MB - initial threshold
+
+func memStats() {
+	for {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+
+		// Dump only if current allocation exceeds previous maximum
+		if m.Alloc > maxMemAlloc {
+			filename := fmt.Sprintf("/tmp/heap_dump_%d.prof", m.Alloc)
+			f, err := os.Create(filename)
+			if err != nil {
+				slog.Error("could not create file: ", "err", err)
+				continue
+			}
+			err = pprof.WriteHeapProfile(f)
+			if err != nil {
+				slog.Error("could not write heap profile: ", "err", err)
+				continue
+			}
+			slog.Info("heap profile written - new memory peak reached",
+				"filename", filename,
+				"Alloc", m.Alloc,
+				"TotalAlloc", m.TotalAlloc,
+				"NumGoroutine", runtime.NumGoroutine(),
+				"HeapSys", m.HeapSys,
+				"HeapAlloc", m.HeapAlloc)
+
+			// Update maximum to current allocation
+			maxMemAlloc = m.Alloc
+
+			if err = f.Close(); err != nil {
+				slog.Error("could not close file: ", "err", err)
+			}
+		}
+		time.Sleep(700 * time.Millisecond)
+	}
 }

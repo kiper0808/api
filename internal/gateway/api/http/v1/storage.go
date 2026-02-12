@@ -1,15 +1,14 @@
 package v1
 
 import (
-	"bytes"
 	"errors"
-	"github.com/kiper0808/api/internal/gateway/domain"
-	"github.com/kiper0808/api/internal/gateway/service"
-	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/kiper0808/api/internal/gateway/domain"
+	"github.com/kiper0808/api/internal/gateway/service"
+	"go.uber.org/zap"
 )
 
 func (h *Handler) initStorageRoutes(api *gin.RouterGroup) {
@@ -77,6 +76,26 @@ type uploadFileResponse struct {
 func (h *Handler) uploadFile(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	// ПРИНУДИТЕЛЬНО используем диск для ЛЮБОГО размера файла
+	const maxMemory = 1 << 20 // 1 MB - всё что больше идет на диск
+	if err := c.Request.ParseMultipartForm(maxMemory); err != nil {
+		h.logger.Error("parse multipart form failed", zap.Error(err))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	// Освобождаем multipart ресурсы после обработки
+	defer func() {
+		if c.Request.MultipartForm != nil {
+			err := c.Request.MultipartForm.RemoveAll()
+			if err != nil {
+				h.logger.Error("failed to remove multipart form", zap.Error(err))
+			} else {
+				h.logger.Info("multipart form removed successfully")
+			}
+		}
+	}()
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		h.logger.Error("form file failed", zap.Error(err))
@@ -114,14 +133,18 @@ func (h *Handler) downloadFile(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("parse file id failed", zap.Error(err))
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
-	data, err := h.services.Storage.DownloadFile(ctx, fileID)
-	if err != nil {
+	// Устанавливаем заголовки для стриминга
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+fileID.String())
+	c.Status(http.StatusOK)
+
+	// Стримим файл напрямую в HTTP response
+	if err = h.services.Storage.DownloadFile(ctx, fileID, c.Writer); err != nil {
 		h.logger.Error("cant download file", zap.Error(err))
-		c.AbortWithStatus(http.StatusBadRequest)
+		// Заголовки уже отправлены, не можем изменить статус
+		return
 	}
-
-	reader := bytes.NewReader(data)
-	c.DataFromReader(http.StatusOK, reader.Size(), "application/octet-stream", reader, nil)
 }

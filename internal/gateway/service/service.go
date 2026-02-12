@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
+	"io"
+	"mime/multipart"
+
+	"github.com/google/uuid"
 	"github.com/kiper0808/api/internal/gateway/config"
 	"github.com/kiper0808/api/internal/gateway/domain"
 	"github.com/kiper0808/api/internal/gateway/repository"
 	"github.com/kiper0808/api/internal/gateway/service/file_storage"
-	"mime/multipart"
-
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/kiper0808/api/pkg/http"
@@ -30,7 +31,7 @@ type Deps struct {
 type Storage interface {
 	AddStorage(ctx context.Context, storage *domain.Storage) error
 	UploadFile(ctx context.Context, file *multipart.FileHeader) (*File, error)
-	DownloadFile(ctx context.Context, id uuid.UUID) ([]byte, error)
+	DownloadFile(ctx context.Context, id uuid.UUID, writer io.Writer) error
 	getStoragesWithMetrics(ctx context.Context, chunks int) ([]StorageData, error)
 	GetMetrics(ctx context.Context, storage *domain.Storage) (*StorageData, error)
 }

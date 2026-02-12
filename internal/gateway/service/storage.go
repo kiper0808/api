@@ -176,69 +176,70 @@ type fileChunk struct {
 	Part    int       `json:"part"`
 }
 
-func (s *serviceStorage) DownloadFile(ctx context.Context, fileID uuid.UUID) ([]byte, error) {
+func (s *serviceStorage) DownloadFile(ctx context.Context, fileID uuid.UUID, writer io.Writer) error {
 	// Получаем все чанки для данного файла
 	fileChunks, err := s.chunkRepository.GetAllByFileID(ctx, fileID)
 	if err != nil {
-		return nil, fmt.Errorf("can't get all chunks: %w", err)
+		return fmt.Errorf("can't get all chunks: %w", err)
 	}
 
-	// Канал для хранения загруженных чанков
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var chunksWithFiles []*fileChunk
-	errCh := make(chan error, len(fileChunks))
-
-	// Загрузка чанков параллельно
-	for _, chunk := range fileChunks {
-		wg.Add(1)
-
-		go func(chunk domain.Chunk) {
-			defer wg.Done()
-
-			// Загружаем данные чанка
-			data, err := s.fileStorageClient.Download(ctx, chunk.StorageHostname, chunk.ID)
-			if err != nil {
-				errCh <- fmt.Errorf("can't download chunk (ID: %v): %w", chunk.ID, err)
-				return
-			}
-
-			// Записываем данные чанка в общий список
-			mu.Lock()
-			chunksWithFiles = append(chunksWithFiles, &fileChunk{
-				ChunkID: chunk.ID,
-				Data:    data,
-				Part:    chunk.Part,
-			})
-			mu.Unlock()
-		}(chunk)
-	}
-
-	// Ждем завершения всех горутин
-	go func() {
-		wg.Wait()
-		close(errCh)
-	}()
-
-	// Обработка ошибок
-	for err := range errCh {
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Сортируем чанки по порядку
-	sort.Slice(chunksWithFiles, func(i, j int) bool {
-		return chunksWithFiles[i].Part < chunksWithFiles[j].Part
+	// Сортируем чанки по порядку (Part)
+	sort.Slice(fileChunks, func(i, j int) bool {
+		return fileChunks[i].Part < fileChunks[j].Part
 	})
 
-	// Собираем весь файл из чанков
-	var resultFile []byte
-	for _, chunkWithFile := range chunksWithFiles {
-		resultFile = append(resultFile, chunkWithFile.Data...)
+	// Скачиваем чанки последовательно с prefetch
+	// Начинаем скачивать chunk N+1 пока пишем chunk N
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	type chunkPipe struct {
+		pr  *io.PipeReader
+		err error
 	}
 
-	return resultFile, nil
+	// Функция для скачивания чанка в pipe
+	downloadChunk := func(chunk domain.Chunk) chunkPipe {
+		pr, pw := io.Pipe()
+		go func() {
+			defer pw.Close()
+			err := s.fileStorageClient.Download(ctx, chunk.StorageHostname, chunk.ID, pw)
+			if err != nil {
+				pw.CloseWithError(err)
+			}
+		}()
+		return chunkPipe{pr: pr, err: nil}
+	}
+
+	// Начинаем скачивать первый чанк
+	var currentChunk *chunkPipe
+	if len(fileChunks) > 0 {
+		cp := downloadChunk(fileChunks[0])
+		currentChunk = &cp
+	}
+
+	// Обрабатываем чанки по порядку с prefetch
+	for i := 0; i < len(fileChunks); i++ {
+		// Начинаем скачивать следующий чанк (prefetch)
+		var nextChunk *chunkPipe
+		if i+1 < len(fileChunks) {
+			cp := downloadChunk(fileChunks[i+1])
+			nextChunk = &cp
+		}
+
+		// Пишем текущий чанк в writer
+		_, err := io.Copy(writer, currentChunk.pr)
+		currentChunk.pr.Close()
+		if err != nil {
+			cancel()
+			return fmt.Errorf("can't write chunk to response (part: %d): %w", i, err)
+		}
+
+		// Переходим к следующему чанку
+		currentChunk = nextChunk
+	}
+
+	return nil
 }
 
 type FileStorageData interface {
